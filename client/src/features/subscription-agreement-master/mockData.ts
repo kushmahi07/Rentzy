@@ -1,0 +1,55 @@
+
+import { SubscriptionAgreement } from './types';
+
+export const MOCK_SUBSCRIPTION_AGREEMENTS: SubscriptionAgreement[] = [
+  {
+    id: '1',
+    agreementName: 'Investor Agreement 2025',
+    documentFilename: 'investor_agreement_2025_v1.0.pdf',
+    documentUrl: '/documents/investor_agreement_2025_v1.0.pdf',
+    version: '1.0',
+    isActive: true,
+    createdAt: new Date('2024-01-15'),
+    updatedAt: new Date('2024-01-15'),
+  },
+  {
+    id: '2',
+    agreementName: 'Standard Subscription Terms',
+    documentFilename: 'standard_subscription_terms_v2.1.pdf',
+    documentUrl: '/documents/standard_subscription_terms_v2.1.pdf',
+    version: '2.1',
+    isActive: true,
+    createdAt: new Date('2024-02-01'),
+    updatedAt: new Date('2024-02-10'),
+  },
+  {
+    id: '3',
+    agreementName: 'Premium Investor Package',
+    documentFilename: 'premium_investor_package_v1.5.pdf',
+    documentUrl: '/documents/premium_investor_package_v1.5.pdf',
+    version: '1.5',
+    isActive: true,
+    createdAt: new Date('2024-03-05'),
+    updatedAt: new Date('2024-03-05'),
+  },
+  {
+    id: '4',
+    agreementName: 'Basic Investment Terms',
+    documentFilename: 'basic_investment_terms_v3.0.pdf',
+    documentUrl: '/documents/basic_investment_terms_v3.0.pdf',
+    version: '3.0',
+    isActive: false,
+    createdAt: new Date('2024-01-20'),
+    updatedAt: new Date('2024-01-25'),
+  },
+  {
+    id: '5',
+    agreementName: 'Commercial Property Agreement',
+    documentFilename: 'commercial_property_agreement_v1.2.pdf',
+    documentUrl: '/documents/commercial_property_agreement_v1.2.pdf',
+    version: '1.2',
+    isActive: true,
+    createdAt: new Date('2024-02-15'),
+    updatedAt: new Date('2024-02-20'),
+  },
+];
