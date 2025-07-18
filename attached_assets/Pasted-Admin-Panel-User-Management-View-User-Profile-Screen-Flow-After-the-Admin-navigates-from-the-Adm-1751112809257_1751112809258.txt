@@ -1,0 +1,90 @@
+Admin Panel – User Management: View User Profile
+Screen Flow:
+After the Admin navigates from the Admin Dashboard → User Management tab, they should see a list of platform users.
+
+User Selection:
+When the Admin clicks on a specific user from the user list, the system should open the User Details View for that user.
+
+User Profile Layout:
+The User Profile should be displayed in a tabbed view, allowing the Admin to switch between the following tabs based on the user’s role:
+
+Renter Tab
+
+Investor Tab
+
+Both Tabs visible if user has both roles
+
+Data to Display:
+
+Basic Info (Visible in Header or Overview Section):
+
+Full Name
+
+Email Address
+
+Phone Number
+
+KYC Status (e.g., Verified / Pending / Rejected)
+
+Role Information:
+
+Display assigned roles: Renter / Investor / Both
+
+Renter Tab (Visible if user is a Renter):
+Booking History:
+Show the last 3 most recent bookings, with key details like booking ID, property name, booking date, and status.
+
+Active Reservations:
+List any ongoing or upcoming reservations with dates and property details.
+
+Investor Tab (Visible if user is an Investor):
+Invested Properties:
+List all properties the user has invested in.
+
+Tokens Owned:
+Show the total number of tokens currently held by the user.
+
+Purchase Value and Current Value:
+Display both the original purchase value and the current market value of the tokens.
+
+Gains/Loss Percentage:
+Calculate and display the percentage gain or loss based on token value change.
+
+Common Features (Applicable for all users):
+Recent Activities Section:
+Show a timeline-style list of recent user activities like registrations, bookings, investments, profile updates, etc.
+
+Activity Charts:
+Include a simple chart to visualize booking activity, investment trends, or token ownership over time.
+
+PDF Download Option:
+Provide an option for Admins to download a full User Report in PDF format, covering all the above details.
+
+Search Bar:
+Include a search bar at the top of the User Management page for Admins to quickly search users by name, email, or phone number.
+
+Filter Options:
+Allow Admins to filter the user list by criteria such as:
+
+Role (Renter / Investor / Both)
+
+KYC Status (Verified / Pending / Rejected)
+
+Registration Date Range
+
+Acceptance Criteria:
+The system should display accurate user data based on the user’s role (Renter, Investor, or Both).
+
+All fields shown must match the data stored in the backend database.
+
+Any section (Renter or Investor) should be hidden if there’s no data available for that user.
+
+If data is missing, display user-friendly fallback messages (e.g., “No bookings found”, “No investments found”).
+
+Validations:
+Role Validation:
+Before displaying role-specific sections (Renter / Investor), the system must check the user’s assigned roles.
+
+Data Availability Checks:
+For each data section, if no relevant data exists, show fallback messages instead of leaving sections blank.
+

@@ -1,0 +1,78 @@
+
+import ejs from 'ejs';
+import path from 'path';
+import { OTP_TEMPLATES, OTPTemplateType } from '../templates/sms/otp';
+import { SMS_NOTIFICATIONS, NotificationTemplateType } from '../templates/sms/notifications';
+
+export class TemplateUtils {
+  private static TEMPLATES_DIR = path.join(__dirname, '../templates');
+
+  /**
+   * Render email template using EJS
+   */
+  static async renderEmailTemplate(
+    templateName: string,
+    data: Record<string, any>
+  ): Promise<string> {
+    try {
+      const templatePath = path.join(this.TEMPLATES_DIR, 'email', `${templateName}.ejs`);
+      return await ejs.renderFile(templatePath, data);
+    } catch (error: any) {
+      console.error(`❌ Error rendering email template ${templateName}:`, error.message);
+      throw new Error(`Failed to render email template: ${templateName}`);
+    }
+  }
+
+  /**
+   * Get SMS OTP template
+   */
+  static getSMSOTPTemplate(
+    templateType: OTPTemplateType,
+    otp: string,
+    expiryMinutes?: number
+  ): string {
+    try {
+      return OTP_TEMPLATES[templateType](otp, expiryMinutes);
+    } catch (error: any) {
+      console.error(`❌ Error getting SMS OTP template ${templateType}:`, error.message);
+      throw new Error(`Failed to get SMS OTP template: ${templateType}`);
+    }
+  }
+
+  /**
+   * Get SMS notification template
+   */
+  static getSMSNotificationTemplate(
+    templateType: NotificationTemplateType,
+    ...args: any[]
+  ): string {
+    try {
+      return SMS_NOTIFICATIONS[templateType](...args);
+    } catch (error: any) {
+      console.error(`❌ Error getting SMS notification template ${templateType}:`, error.message);
+      throw new Error(`Failed to get SMS notification template: ${templateType}`);
+    }
+  }
+
+  /**
+   * Validate email template data
+   */
+  static validateEmailTemplateData(templateName: string, data: Record<string, any>): boolean {
+    const requiredFields: Record<string, string[]> = {
+      verification: ['userName', 'verificationLink'],
+      welcome: ['userName']
+    };
+
+    const required = requiredFields[templateName];
+    if (!required) {
+      throw new Error(`Unknown email template: ${templateName}`);
+    }
+
+    const missing = required.filter(field => !data[field]);
+    if (missing.length > 0) {
+      throw new Error(`Missing required fields for ${templateName} template: ${missing.join(', ')}`);
+    }
+
+    return true;
+  }
+}

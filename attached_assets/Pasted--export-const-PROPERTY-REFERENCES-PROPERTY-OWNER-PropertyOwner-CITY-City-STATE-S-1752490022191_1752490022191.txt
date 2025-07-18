@@ -1,0 +1,99 @@
+
+export const PROPERTY_REFERENCES = {
+  PROPERTY_OWNER: 'PropertyOwner',
+  CITY: 'City',
+  STATE: 'State',
+  COUNTRY: 'Country',
+  AMENITY: 'PropertyAmenity',
+  PROPERTY_FEATURE: 'PropertyFeature',
+  RULE: 'PropertyRule',
+  ZONING_CLASSIFICATION: 'ZoningClassification'
+} as const;
+
+export const PROPERTY_TYPES = {
+  RESIDENTIAL: 'residential',
+  COMMERCIAL: 'commercial'
+} as const;
+
+export const PROPERTY_STATUS = {
+  DRAFT: 'draft',
+  PENDING: 'pending',
+  REJECTED: 'rejected',
+  APPROVED: 'approved',
+  RESUBMIT: 'resubmit'
+} as const;
+
+export const BLOCKCHAIN_STATUS = {
+  PENDING: 'pending',
+  MINTED: 'minted',
+  LISTED: 'listed'
+} as const;
+
+export const ROOM_TYPES = {
+  MASTER: 'master',
+  GUEST: 'guest',
+  KIDS: 'kids',
+  STAFF: 'staff'
+} as const;
+
+export const BED_TYPES = {
+  KING: 'king',
+  QUEEN: 'queen',
+  TWIN: 'twin',
+  DOUBLE: 'double'
+} as const;
+
+export const CURRENCY = {
+  USD: 'USD',
+  EUR: 'EUR',
+  GBP: 'GBP'
+} as const;
+
+
+
+export const OWNERSHIP_TYPE = {
+  FULL_OWNER: 'full_owner',
+  REPRESENTATIVE: 'representative',
+  CO_OWNER: 'co_owner'
+} as const;
+
+export const APPROVED_MARKETS = [
+  'Palm Springs',
+  'Aspen',
+  'Napa Valley',
+  'Miami Beach',
+  'Martha\'s Vineyard',
+  'Jackson Hole',
+  'Park City',
+  'Big Sur',
+  'Kiawah Island',
+  'Telluride'
+] as const;
+
+// Property validation constants
+export const PROPERTY_VALIDATION = {
+  MIN_BEDROOMS: 3,
+  MIN_BATHROOMS: 3,
+  MIN_HOME_VALUE: 1500000,
+  MIN_SQUARE_FOOTAGE: 3000,
+  MIN_AVAILABLE_WEEKS: 20,
+  MAX_AVAILABLE_WEEKS: 52,
+  MIN_YEAR: 1900,
+  TITLE_MAX_LENGTH: 100,
+  DESCRIPTION_MAX_LENGTH: 2000,
+  MIN_GUEST_CAPACITY: 1,
+  MAX_GUEST_CAPACITY: 50,
+  MIN_MINIMUM_STAY: 1,
+  MAX_MINIMUM_STAY: 365,
+  FURNISHING_DESCRIPTION_MAX_LENGTH: 1000,
+  CONCIERGE_SERVICES_MAX_LENGTH: 500,
+  LOCAL_HIGHLIGHTS_MAX_LENGTH: 300
+} as const;
+
+export type PropertyType = typeof PROPERTY_TYPES[keyof typeof PROPERTY_TYPES];
+export type PropertyStatus = typeof PROPERTY_STATUS[keyof typeof PROPERTY_STATUS];
+export type BlockchainStatus = typeof BLOCKCHAIN_STATUS[keyof typeof BLOCKCHAIN_STATUS];
+export type RoomType = typeof ROOM_TYPES[keyof typeof ROOM_TYPES];
+export type BedType = typeof BED_TYPES[keyof typeof BED_TYPES];
+export type OwnershipType = typeof OWNERSHIP_TYPE[keyof typeof OWNERSHIP_TYPE];
+export type ApprovedMarket = typeof APPROVED_MARKETS[number];

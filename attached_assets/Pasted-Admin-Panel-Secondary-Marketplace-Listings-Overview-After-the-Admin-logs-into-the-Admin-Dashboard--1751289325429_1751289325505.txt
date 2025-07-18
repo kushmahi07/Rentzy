@@ -1,0 +1,66 @@
+Admin Panel – Secondary Marketplace Listings Overview
+After the Admin logs into the Admin Dashboard, they should navigate to the Secondary Marketplace module using the Sidebar Navigation.
+
+When the Admin selects the “Secondary Marketplace” module, the system should load the Marketplace Listings Overview page.
+
+On this page, the Admin should see the following metrics displayed at the top of the page:
+
+Total Listings: Shows the total number of property listings currently available in the secondary marketplace.
+
+Active Trades: Shows the count of ongoing active trades for tokenized properties.
+
+Volume Traded (in USD): Displays the total trade volume in US Dollars for all completed trades.
+
+Average Token Price: Displays the average price per token across all listed trades.
+
+Below the metrics, the Admin should see the list of tokenized properties placed for resale, displayed in a table format.
+
+The table should contain the following columns:
+
+Property Name
+
+Token Symbol
+
+Token Contract Address
+
+Listed Tokens Count
+
+Price per Token
+
+Current Status (Active, Sold, Cancelled)
+
+Owner Wallet
+
+Last Traded Date
+
+For each row in the table, there should be the following Call-to-Action (CTA) buttons:
+
+View Trade Logs
+
+Freeze Resale
+
+Remove Listing
+
+Business Logic:
+
+The list should include only tokenized and resale-enabled properties.
+
+The listings should be updated in real-time to reflect the latest marketplace status.
+
+Acceptance Criteria:
+
+The list should be sortable and searchable.
+
+All actions (View Trade Logs, Freeze Resale, Remove Listing) should display a confirmation popup before performing the action.
+
+Validations:
+
+The Token Contract Address should always follow a valid contract address format.
+
+The Price per Token should always be a positive value.
+
+The Admin cannot freeze a listing that is already inactive (Sold or Cancelled).
+
+The page layout should display the metrics section on top, followed by the table of listings below, with filters and pagination controls for easier navigation.
+
+Each action button on the table should include tooltips explaining their functionality for better Admin usability.

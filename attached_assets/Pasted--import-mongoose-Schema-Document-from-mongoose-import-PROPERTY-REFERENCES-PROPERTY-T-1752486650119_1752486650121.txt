@@ -1,0 +1,800 @@
+
+import mongoose, { Schema, Document } from 'mongoose';
+import {
+  PROPERTY_REFERENCES,
+  PROPERTY_TYPES,
+  PROPERTY_STATUS,
+  BLOCKCHAIN_STATUS,
+  ROOM_TYPES,
+  BED_TYPES,
+  CURRENCY,
+  OWNERSHIP_TYPE,
+  APPROVED_MARKETS,
+  PROPERTY_VALIDATION,
+  PropertyType,
+  PropertyStatus,
+  BlockchainStatus,
+  RoomType,
+  BedType,
+  OwnershipType,
+  ApprovedMarket
+} from '../config/property.constants';
+
+export interface IProperty extends Document {
+  _propertyOwner: mongoose.Schema.Types.ObjectId;
+  title: string;
+  description?: string;
+  type?: PropertyType;
+  address?: {
+    street?: string;
+    _city?: mongoose.Schema.Types.ObjectId;
+    _state?: mongoose.Schema.Types.ObjectId;
+    _country?: mongoose.Schema.Types.ObjectId;
+    zipCode?: string;
+    coordinates?: {
+      latitude: number;
+      longitude: number;
+    };
+  };
+  rentAmount?: {
+    basePrice?: number; // per night
+    weekendPrice?: number;
+    peakSeasonPrice?: number;
+    currency?: string;
+  };
+  maintenanceFee?: {
+    amount: number;
+    currency: string;
+  };
+  bedrooms?: {
+    roomType: RoomType;
+    bedType: BedType;
+    attachedBathroom: boolean;
+    walkInCloset: boolean;
+    roomSizeInSqft?: number;
+    hasBalcony: boolean;
+  }[];
+  bathrooms?: number;
+  area?: {
+    value: number; // in sqft only
+  };
+  _amenities?: mongoose.Schema.Types.ObjectId[]; // Reference to amenities collection
+  images?: {
+    key: string;
+    url: string;
+  }[];
+  status: PropertyStatus;
+  blockchainStatus: BlockchainStatus;
+  _rules?: mongoose.Schema.Types.ObjectId[]; // Reference to rules collection
+  propertyValueEstimate?: {
+    value: number;
+    currency: string;
+  }; // min $1.5M recommended
+  yearOfBuilt?: number;
+  yearOfRenovated?: number;
+  _zoningClassification?: mongoose.Schema.Types.ObjectId; // Reference to zoning classification
+  availableWeeksPerYear?: number; // min 20 recommended
+  isFurnished?: boolean;
+  furnishingDescription?: string;
+  ownershipType?: OwnershipType;
+  allowsFractionalizationOrEquity?: boolean;
+  _propertyFeatures?: mongoose.Schema.Types.ObjectId[]; // Reference to property features collection
+  conciergeServicesIncluded?: string;
+  videos?: {
+    key: string;
+    url: string;
+  }[];
+  videos360?: {
+    key: string;
+    url: string;
+  }[];
+  documents?: {
+    propertyDeed?: {
+      key: string;
+      url: string;
+    }[];
+    zoningCertificate?: {
+      key: string;
+      url: string;
+    }[];
+    occupancyCertificate?: {
+      key: string;
+      url: string;
+    }[];
+    governmentIssuedId?: {
+      key: string;
+      url: string;
+    }[];
+    propertyTaxBill?: {
+      key: string;
+      url: string;
+    }[];
+    titleReportOrInsurance?: {
+      key: string;
+      url: string;
+    }[];
+    rentRoll?: {
+      key: string;
+      url: string;
+    }[];
+    incomeandExpenseStatement?: {
+      key: string;
+      url: string;
+    }[];
+    camAgreement?: {
+      key: string;
+      url: string;
+    }[];
+    propertyConditionAssessment?: {
+      key: string;
+      url: string;
+    }[];
+    proofOfInsurance?: {
+      key: string;
+      url: string;
+    }[];
+    utilityBill?: {
+      key: string;
+      url: string;
+    }[];
+    propertyAppraisal?: {
+      key: string;
+      url: string;
+    }[];
+    authorizationToTokenize?: {
+      key: string;
+      url: string;
+    }[];
+    conditional?: {
+      key: string;
+      url: string;
+    }[];
+    mortgageStatement?: {
+      key: string;
+      url: string;
+    }[];
+    hoaDocument?: {
+      key: string;
+      url: string;
+    }[];
+    granchiseAgreement?: {
+      key: string;
+      url: string;
+    }[];
+    businessLicense?: {
+      key: string;
+      url: string;
+    }[];
+    adaComplianceReport?: {
+      key: string;
+      url: string;
+    }[];
+    safetyReport?: {
+      key: string;
+      url: string;
+    }[];
+    appraisalReport?: {
+      key: string;
+      url: string;
+    }[];
+  };
+  checkInCheckOutTimes?: {
+    checkIn: string; // e.g., "3:00 PM"
+    checkOut: string; // e.g., "11:00 AM"
+  };
+  localHighlights?: string; // 1-2 sentences
+  submittedAt?: Date;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+const propertySchema: Schema = new Schema({
+  _propertyOwner: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: PROPERTY_REFERENCES.PROPERTY_OWNER,
+    required: [true, 'Property owner is required'],
+    index: true
+  },
+
+  title: {
+    type: String,
+    required: [true, 'Property title is required'],
+    trim: true,
+    maxlength: [PROPERTY_VALIDATION.TITLE_MAX_LENGTH, `Title cannot exceed ${PROPERTY_VALIDATION.TITLE_MAX_LENGTH} characters`]
+  },
+
+  description: {
+    type: String,
+    trim: true,
+    maxlength: [PROPERTY_VALIDATION.DESCRIPTION_MAX_LENGTH, `Description cannot exceed ${PROPERTY_VALIDATION.DESCRIPTION_MAX_LENGTH} characters`]
+  },
+
+  type: {
+    type: String,
+    enum: Object.values(PROPERTY_TYPES)
+  },
+
+  address: {
+    street: {
+      type: String,
+      trim: true
+    },
+    _city: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: PROPERTY_REFERENCES.CITY
+    },
+    _state: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: PROPERTY_REFERENCES.STATE
+    },
+    _country: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: PROPERTY_REFERENCES.COUNTRY
+    },
+    zipCode: {
+      type: String,
+      trim: true
+    },
+    coordinates: {
+      latitude: {
+        type: Number,
+        min: -90,
+        max: 90
+      },
+      longitude: {
+        type: Number,
+        min: -180,
+        max: 180
+      }
+    }
+  },
+
+  rentAmount: {
+    basePrice: {
+      type: Number,
+      min: [0, 'Rent amount cannot be negative']
+    },
+    weekendPrice: {
+      type: Number,
+      min: [0, 'Weekend price cannot be negative']
+    },
+    peakSeasonPrice: {
+      type: Number,
+      min: [0, 'Peak season price cannot be negative']
+    },
+    currency: {
+      type: String,
+      enum: Object.values(CURRENCY),
+      default: CURRENCY.USD,
+      uppercase: true
+    }
+  },
+
+  maintenanceFee: {
+    amount: {
+      type: Number,
+      min: [0, 'Maintenance fee cannot be negative'],
+      required: function(this: IProperty) {
+        return this.maintenanceFee && this.maintenanceFee.amount !== undefined;
+      }
+    },
+    currency: {
+      type: String,
+      enum: Object.values(CURRENCY),
+      default: CURRENCY.USD,
+      uppercase: true,
+      required: function(this: IProperty) {
+        return this.maintenanceFee && this.maintenanceFee.amount !== undefined;
+      }
+    }
+  },
+
+  bedrooms: [{
+    roomType: {
+      type: String,
+      enum: Object.values(ROOM_TYPES),
+      required: true
+    },
+    bedType: {
+      type: String,
+      enum: Object.values(BED_TYPES),
+      required: true
+    },
+    attachedBathroom: {
+      type: Boolean,
+      default: false,
+      required: true
+    },
+    walkInCloset: {
+      type: Boolean,
+      default: false,
+      required: true
+    },
+    roomSizeInSqft: {
+      type: Number,
+      min: [50, 'Room size should be at least 50 sqft']
+    },
+    hasBalcony: {
+      type: Boolean,
+      default: false,
+      required: true
+    }
+  }],
+
+  bathrooms: {
+    type: Number,
+    min: [PROPERTY_VALIDATION.MIN_BATHROOMS, `Minimum ${PROPERTY_VALIDATION.MIN_BATHROOMS} bathrooms required for luxury properties`]
+  },
+
+  area: {
+    value: {
+      type: Number,
+      min: [PROPERTY_VALIDATION.MIN_SQUARE_FOOTAGE, `Square footage should be at least ${PROPERTY_VALIDATION.MIN_SQUARE_FOOTAGE} sqft (recommended)`]
+    }
+  },
+
+  _amenities: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: PROPERTY_REFERENCES.AMENITY
+  }],
+
+  images: [{
+    key: {
+      type: String,
+      required: true,
+      trim: true
+    },
+    url: {
+      type: String,
+      required: true,
+      trim: true
+    }
+  }],
+
+  status: {
+    type: String,
+    enum: Object.values(PROPERTY_STATUS),
+    default: PROPERTY_STATUS.DRAFT,
+    required: true
+  },
+
+  blockchainStatus: {
+    type: String,
+    enum: Object.values(BLOCKCHAIN_STATUS),
+    default: BLOCKCHAIN_STATUS.PENDING,
+    required: true
+  },
+
+  _rules: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: PROPERTY_REFERENCES.RULE
+  }],
+
+  propertyValueEstimate: {
+    value: {
+      type: Number,
+      min: [PROPERTY_VALIDATION.MIN_HOME_VALUE, `Property value should be at least $${PROPERTY_VALIDATION.MIN_HOME_VALUE.toLocaleString()} (recommended)`]
+    },
+    currency: {
+      type: String,
+      enum: Object.values(CURRENCY),
+      default: CURRENCY.USD,
+      uppercase: true
+    }
+  },
+
+  yearOfBuilt: {
+    type: Number,
+    min: [PROPERTY_VALIDATION.MIN_YEAR, 'Year must be valid'],
+    max: [new Date().getFullYear(), 'Year cannot be in the future']
+  },
+
+  yearOfRenovated: {
+    type: Number,
+    min: [PROPERTY_VALIDATION.MIN_YEAR, 'Year must be valid'],
+    max: [new Date().getFullYear(), 'Year cannot be in the future']
+  },
+
+  _zoningClassification: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: PROPERTY_REFERENCES.ZONING_CLASSIFICATION
+  },
+
+  availableWeeksPerYear: {
+    type: Number,
+    min: [PROPERTY_VALIDATION.MIN_AVAILABLE_WEEKS, `At least ${PROPERTY_VALIDATION.MIN_AVAILABLE_WEEKS} weeks per year recommended`],
+    max: [PROPERTY_VALIDATION.MAX_AVAILABLE_WEEKS, `Cannot exceed ${PROPERTY_VALIDATION.MAX_AVAILABLE_WEEKS} weeks per year`]
+  },
+
+  isFurnished: {
+    type: Boolean
+  },
+
+  furnishingDescription: {
+    type: String,
+    trim: true,
+    maxlength: [PROPERTY_VALIDATION.FURNISHING_DESCRIPTION_MAX_LENGTH, `Furnishing description cannot exceed ${PROPERTY_VALIDATION.FURNISHING_DESCRIPTION_MAX_LENGTH} characters`]
+  },
+
+  ownershipType: {
+    type: String,
+    enum: Object.values(OWNERSHIP_TYPE)
+  },
+
+  allowsFractionalizationOrEquity: {
+    type: Boolean
+  },
+
+  _propertyFeatures: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: PROPERTY_REFERENCES.PROPERTY_FEATURE
+  }],
+
+  conciergeServicesIncluded: {
+    type: String,
+    trim: true,
+    maxlength: [PROPERTY_VALIDATION.CONCIERGE_SERVICES_MAX_LENGTH, `Concierge services description cannot exceed ${PROPERTY_VALIDATION.CONCIERGE_SERVICES_MAX_LENGTH} characters`]
+  },
+
+  videos: [{
+    key: {
+      type: String,
+      required: true,
+      trim: true
+    },
+    url: {
+      type: String,
+      required: true,
+      trim: true
+    }
+  }],
+
+  videos360: [{
+    key: {
+      type: String,
+      required: true,
+      trim: true
+    },
+    url: {
+      type: String,
+      required: true,
+      trim: true
+    }
+  }],
+
+  documents: {
+    propertyDeed: [{
+      key: {
+        type: String,
+        required: true,
+        trim: true
+      },
+      url: {
+        type: String,
+        required: true,
+        trim: true
+      }
+    }],
+    zoningCertificate: [{
+      key: {
+        type: String,
+        required: true,
+        trim: true
+      },
+      url: {
+        type: String,
+        required: true,
+        trim: true
+      }
+    }],
+    occupancyCertificate: [{
+      key: {
+        type: String,
+        required: true,
+        trim: true
+      },
+      url: {
+        type: String,
+        required: true,
+        trim: true
+      }
+    }],
+    governmentIssuedId: [{
+      key: {
+        type: String,
+        required: true,
+        trim: true
+      },
+      url: {
+        type: String,
+        required: true,
+        trim: true
+      }
+    }],
+    propertyTaxBill: [{
+      key: {
+        type: String,
+        required: true,
+        trim: true
+      },
+      url: {
+        type: String,
+        required: true,
+        trim: true
+      }
+    }],
+    titleReportOrInsurance: [{
+      key: {
+        type: String,
+        required: true,
+        trim: true
+      },
+      url: {
+        type: String,
+        required: true,
+        trim: true
+      }
+    }],
+    rentRoll: [{
+      key: {
+        type: String,
+        required: true,
+        trim: true
+      },
+      url: {
+        type: String,
+        required: true,
+        trim: true
+      }
+    }],
+    incomeandExpenseStatement: [{
+      key: {
+        type: String,
+        required: true,
+        trim: true
+      },
+      url: {
+        type: String,
+        required: true,
+        trim: true
+      }
+    }],
+    camAgreement: [{
+      key: {
+        type: String,
+        required: true,
+        trim: true
+      },
+      url: {
+        type: String,
+        required: true,
+        trim: true
+      }
+    }],
+    propertyConditionAssessment: [{
+      key: {
+        type: String,
+        required: true,
+        trim: true
+      },
+      url: {
+        type: String,
+        required: true,
+        trim: true
+      }
+    }],
+    proofOfInsurance: [{
+      key: {
+        type: String,
+        required: true,
+        trim: true
+      },
+      url: {
+        type: String,
+        required: true,
+        trim: true
+      }
+    }],
+    utilityBill: [{
+      key: {
+        type: String,
+        required: true,
+        trim: true
+      },
+      url: {
+        type: String,
+        required: true,
+        trim: true
+      }
+    }],
+    propertyAppraisal: [{
+      key: {
+        type: String,
+        required: true,
+        trim: true
+      },
+      url: {
+        type: String,
+        required: true,
+        trim: true
+      }
+    }],
+    authorizationToTokenize: [{
+      key: {
+        type: String,
+        required: true,
+        trim: true
+      },
+      url: {
+        type: String,
+        required: true,
+        trim: true
+      }
+    }],
+    conditional: [{
+      key: {
+        type: String,
+        required: true,
+        trim: true
+      },
+      url: {
+        type: String,
+        required: true,
+        trim: true
+      }
+    }],
+    mortgageStatement: [{
+      key: {
+        type: String,
+        required: true,
+        trim: true
+      },
+      url: {
+        type: String,
+        required: true,
+        trim: true
+      }
+    }],
+    hoaDocument: [{
+      key: {
+        type: String,
+        required: true,
+        trim: true
+      },
+      url: {
+        type: String,
+        required: true,
+        trim: true
+      }
+    }],
+    granchiseAgreement: [{
+      key: {
+        type: String,
+        required: true,
+        trim: true
+      },
+      url: {
+        type: String,
+        required: true,
+        trim: true
+      }
+    }],
+    businessLicense: [{
+      key: {
+        type: String,
+        required: true,
+        trim: true
+      },
+      url: {
+        type: String,
+        required: true,
+        trim: true
+      }
+    }],
+    adaComplianceReport: [{
+      key: {
+        type: String,
+        required: true,
+        trim: true
+      },
+      url: {
+        type: String,
+        required: true,
+        trim: true
+      }
+    }],
+    safetyReport: [{
+      key: {
+        type: String,
+        required: true,
+        trim: true
+      },
+      url: {
+        type: String,
+        required: true,
+        trim: true
+      }
+    }],
+    appraisalReport: [{
+      key: {
+        type: String,
+        required: true,
+        trim: true
+      },
+      url: {
+        type: String,
+        required: true,
+        trim: true
+      }
+    }]
+  },
+
+  checkInCheckOutTimes: {
+    checkIn: {
+      type: String,
+      trim: true,
+      validate: {
+        validator: function(value: string) {
+          if (!value) return true; // Optional field
+          // Validate time format (e.g., "3:00 PM", "15:00")
+          return /^(1[0-2]|0?[1-9]):([0-5][0-9]) (AM|PM)$|^([01]?[0-9]|2[0-3]):([0-5][0-9])$/.test(value);
+        },
+        message: 'Check-in time must be in format "3:00 PM" or "15:00"'
+      }
+    },
+    checkOut: {
+      type: String,
+      trim: true,
+      validate: {
+        validator: function(value: string) {
+          if (!value) return true; // Optional field
+          // Validate time format (e.g., "11:00 AM", "11:00")
+          return /^(1[0-2]|0?[1-9]):([0-5][0-9]) (AM|PM)$|^([01]?[0-9]|2[0-3]):([0-5][0-9])$/.test(value);
+        },
+        message: 'Check-out time must be in format "11:00 AM" or "11:00"'
+      }
+    }
+  },
+
+  localHighlights: {
+    type: String,
+    trim: true,
+    maxlength: [PROPERTY_VALIDATION.LOCAL_HIGHLIGHTS_MAX_LENGTH, `Local highlights cannot exceed ${PROPERTY_VALIDATION.LOCAL_HIGHLIGHTS_MAX_LENGTH} characters`]
+  },
+
+  submittedAt: {
+    type: Date
+  }
+}, {
+  timestamps: true,
+  toJSON: {
+    transform: function(doc, ret) {
+      delete ret.__v;
+      return ret;
+    }
+  }
+});
+
+// Indexes for better query performance
+propertySchema.index({ _propertyOwner: 1 });
+propertySchema.index({ type: 1 });
+propertySchema.index({ status: 1 });
+propertySchema.index({ blockchainStatus: 1 });
+propertySchema.index({ 'address._city': 1 });
+propertySchema.index({ 'address._state': 1 });
+propertySchema.index({ 'address._country': 1 });
+propertySchema.index({ 'rentAmount.basePrice': 1 });
+propertySchema.index({ createdAt: -1 });
+propertySchema.index({ 'propertyValueEstimate.value': 1 });
+propertySchema.index({ availableWeeksPerYear: 1 });
+propertySchema.index({ ownershipType: 1 });
+propertySchema.index({ yearOfBuilt: 1 });
+propertySchema.index({ yearOfRenovated: 1 });
+
+// Compound indexes
+propertySchema.index({ type: 1, status: 1 });
+propertySchema.index({ _propertyOwner: 1, status: 1 });
+
+const Property = mongoose.model<IProperty>('Property', propertySchema);
+
+export default Property;

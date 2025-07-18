@@ -1,0 +1,231 @@
+
+import mongoose, { Schema, Document } from 'mongoose';
+import { CURRENCY } from '../config/property.constants';
+
+export interface ITokenListHistory extends Document {
+  _tokenList: mongoose.Schema.Types.ObjectId;
+  _tokenOwner: mongoose.Schema.Types.ObjectId;
+  _property: mongoose.Schema.Types.ObjectId;
+  _user: mongoose.Schema.Types.ObjectId;
+  tokenId: string;
+  totalListQuantity: number;
+  onListQuantity: number;
+  soldQuantity: number;
+  price: {
+    value: number;
+    currency: string;
+  };
+  isActive: boolean;
+  listingId: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+const tokenListHistorySchema = new Schema<ITokenListHistory>(
+  {
+    _tokenList: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'TokenList',
+      required: [true, 'Token list reference is required'],
+      index: true
+    },
+    _tokenOwner: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'TokenOwner',
+      required: [true, 'Token owner reference is required'],
+      index: true
+    },
+    _property: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Property',
+      required: [true, 'Property is required'],
+      index: true
+    },
+    _user: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      required: [true, 'User is required'],
+      index: true
+    },
+    tokenId: {
+      type: String,
+      required: [true, 'Token ID is required'],
+      trim: true,
+      index: true
+    },
+    totalListQuantity: {
+      type: Number,
+      required: [true, 'Total list quantity is required'],
+      min: [1, 'Total list quantity must be at least 1']
+    },
+    onListQuantity: {
+      type: Number,
+      required: [true, 'On list quantity is required'],
+      min: [0, 'On list quantity cannot be negative']
+    },
+    soldQuantity: {
+      type: Number,
+      required: [true, 'Sold quantity is required'],
+      min: [0, 'Sold quantity cannot be negative'],
+      default: 0
+    },
+    price: {
+      value: {
+        type: Number,
+        required: [true, 'Price value is required'],
+        min: [0, 'Price cannot be negative']
+      },
+      currency: {
+        type: String,
+        enum: Object.values(CURRENCY),
+        required: [true, 'Currency is required'],
+        uppercase: true,
+        trim: true,
+        default: CURRENCY.USD
+      }
+    },
+    isActive: {
+      type: Boolean,
+      default: true,
+      required: [true, 'Active status is required']
+    },
+    listingId: {
+      type: String,
+      required: [true, 'Listing ID is required'],
+      trim: true,
+      index: true
+    }
+  },
+  {
+    timestamps: true,
+    toJSON: {
+      transform: function(doc, ret) {
+        const { __v, ...cleanRet } = ret;
+        return cleanRet;
+      }
+    }
+  }
+);
+
+// Indexes for better query performance
+tokenListHistorySchema.index({ _tokenList: 1 });
+tokenListHistorySchema.index({ _tokenOwner: 1 });
+tokenListHistorySchema.index({ _property: 1, _user: 1 });
+tokenListHistorySchema.index({ tokenId: 1 });
+tokenListHistorySchema.index({ _user: 1, isActive: 1 });
+tokenListHistorySchema.index({ _property: 1, isActive: 1 });
+tokenListHistorySchema.index({ 'price.value': 1 });
+tokenListHistorySchema.index({ 'price.currency': 1 });
+tokenListHistorySchema.index({ onListQuantity: 1 });
+tokenListHistorySchema.index({ soldQuantity: 1 });
+tokenListHistorySchema.index({ createdAt: -1 });
+tokenListHistorySchema.index({ listingId: 1 });
+
+// Compound indexes
+tokenListHistorySchema.index({ _tokenList: 1, createdAt: -1 });
+tokenListHistorySchema.index({ _user: 1, _property: 1, createdAt: -1 });
+tokenListHistorySchema.index({ _property: 1, tokenId: 1, createdAt: -1 });
+tokenListHistorySchema.index({ _user: 1, tokenId: 1, createdAt: -1 });
+tokenListHistorySchema.index({ listingId: 1, createdAt: -1 });
+
+// Static method to get history by token list
+tokenListHistorySchema.statics.getHistoryByTokenList = function(tokenListId: string) {
+  return this.find({
+    _tokenList: new mongoose.Types.ObjectId(tokenListId)
+  })
+    .populate('_property', 'title type')
+    .populate('_user', 'name.fullName email')
+    .sort({ createdAt: -1 });
+};
+
+// Static method to get user's listing history
+tokenListHistorySchema.statics.getUserListingHistory = function(userId: string) {
+  return this.find({
+    _user: new mongoose.Types.ObjectId(userId)
+  })
+    .populate('_property', 'title type')
+    .populate('_tokenList')
+    .sort({ createdAt: -1 });
+};
+
+// Static method to get property listing history
+tokenListHistorySchema.statics.getPropertyListingHistory = function(propertyId: string) {
+  return this.find({
+    _property: new mongoose.Types.ObjectId(propertyId)
+  })
+    .populate('_user', 'name.fullName email')
+    .populate('_tokenList')
+    .sort({ createdAt: -1 });
+};
+
+// Static method to track price changes over time
+tokenListHistorySchema.statics.getPriceHistory = function(tokenListId: string) {
+  return this.aggregate([
+    {
+      $match: {
+        _tokenList: new mongoose.Types.ObjectId(tokenListId)
+      }
+    },
+    {
+      $sort: { createdAt: 1 }
+    },
+    {
+      $project: {
+        createdAt: 1,
+        'price.value': 1,
+        'price.currency': 1,
+        onListQuantity: 1,
+        soldQuantity: 1,
+        priceChange: {
+          $subtract: ['$price.value', { $ifNull: ['$previousPrice', 0] }]
+        }
+      }
+    }
+  ]);
+};
+
+// Static method to get marketplace activity analytics
+tokenListHistorySchema.statics.getMarketplaceActivity = function(timeFrame: number = 30) {
+  const fromDate = new Date();
+  fromDate.setDate(fromDate.getDate() - timeFrame);
+  
+  return this.aggregate([
+    {
+      $match: {
+        createdAt: { $gte: fromDate }
+      }
+    },
+    {
+      $group: {
+        _id: {
+          $dateToString: {
+            format: '%Y-%m-%d',
+            date: '$createdAt'
+          }
+        },
+        totalListings: { $sum: 1 },
+        totalTokensListed: { $sum: '$onListQuantity' },
+        totalTokensSold: { $sum: '$soldQuantity' },
+        averagePrice: { $avg: '$price.value' },
+        uniqueUsers: { $addToSet: '$_user' },
+        uniqueProperties: { $addToSet: '$_property' }
+      }
+    },
+    {
+      $addFields: {
+        activeUsers: { $size: '$uniqueUsers' },
+        activeProperties: { $size: '$uniqueProperties' }
+      }
+    },
+    {
+      $unset: ['uniqueUsers', 'uniqueProperties']
+    },
+    {
+      $sort: { _id: 1 }
+    }
+  ]);
+};
+
+const TokenListHistory = mongoose.model<ITokenListHistory>('TokenListHistory', tokenListHistorySchema);
+
+export default TokenListHistory;

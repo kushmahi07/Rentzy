@@ -1,0 +1,73 @@
+
+import sgMail from '@sendgrid/mail';
+import { TemplateUtils } from '../utils/template.utils';
+
+export const sendVerificationEmail = async (
+  email: string, 
+  verificationLink: string, 
+  userName: string
+): Promise<void> => {
+  try {
+    const apiKey = process.env.SENDGRID_API_KEY;
+    const fromEmail = process.env.SENDGRID_FROM_EMAIL;
+
+    if (!apiKey || !fromEmail) {
+      throw new Error('SendGrid credentials not found in environment variables');
+    }
+
+    sgMail.setApiKey(apiKey);
+
+    // Validate template data
+    const templateData = { userName, verificationLink };
+    TemplateUtils.validateEmailTemplateData('verification', templateData);
+
+    // Render email template
+    const htmlContent = await TemplateUtils.renderEmailTemplate('verification', templateData);
+
+    const msg = {
+      to: email,
+      from: fromEmail,
+      subject: 'Verify Your Email Address',
+      html: htmlContent
+    };
+
+    await sgMail.send(msg);
+    console.log(`📧 Verification email sent successfully to ${email}`);
+  } catch (error: any) {
+    console.error('❌ Error sending verification email:', error.message);
+    throw new Error('Failed to send verification email. Please try again.');
+  }
+};
+
+export const sendWelcomeEmail = async (email: string, userName: string): Promise<void> => {
+  try {
+    const apiKey = process.env.SENDGRID_API_KEY;
+    const fromEmail = process.env.SENDGRID_FROM_EMAIL;
+
+    if (!apiKey || !fromEmail) {
+      throw new Error('SendGrid credentials not found in environment variables');
+    }
+
+    sgMail.setApiKey(apiKey);
+
+    // Validate template data
+    const templateData = { userName };
+    TemplateUtils.validateEmailTemplateData('welcome', templateData);
+
+    // Render email template
+    const htmlContent = await TemplateUtils.renderEmailTemplate('welcome', templateData);
+
+    const msg = {
+      to: email,
+      from: fromEmail,
+      subject: 'Welcome to Property Management Platform!',
+      html: htmlContent
+    };
+
+    await sgMail.send(msg);
+    console.log(`📧 Welcome email sent successfully to ${email}`);
+  } catch (error: any) {
+    console.error('❌ Error sending welcome email:', error.message);
+    throw new Error('Failed to send welcome email. Please try again.');
+  }
+};

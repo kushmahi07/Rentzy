@@ -1,0 +1,46 @@
+let's add below feture and remove home screen code . 
+Given the Admin enters a valid email and password, the system should generate a 6-digit OTP and send it to the registered email and mobile number (via SMS). The Admin must enter the OTP within 2 minutes to verify identity. After successful OTP validation, the Admin is redirected to the Dashboard. If credentials or OTP are invalid, the system should provide appropriate error messages. 
+Actors 
+Admin 
+System (Backend) 
+Email/SMS Gateway 
+Primary Flow – Successful Login with 2FA 
+Admin opens the login page. 
+Admin enters email and password. 
+System validates the credentials: 
+If valid, proceed to OTP verification screen. 
+If invalid, show "Invalid email or password". 
+System generates a 6-digit OTP, stores it with a timestamp, and sends it via: 
+Email 
+SMS to registered mobile number 
+The OTP screen is shown: 
+Input field for 6-digit OTP 
+Countdown timer: 2 minutes 
+Resend OTP button (initially disabled for 30 seconds) 
+Admin enters the OTP and clicks Verify. 
+System checks: 
+If OTP is valid and not expired, redirect to Dashboard. 
+If invalid or expired, show "Invalid or expired OTP". 
+Alternate Flows 
+Invalid Credentials: 
+If credentials are wrong, do not move to OTP screen. 
+Show: "Invalid email or password". 
+Incorrect OTP: 
+If entered OTP does not match or has expired. 
+Show: "Invalid or expired OTP". 
+Resend OTP Logic: 
+Button is enabled only after 30 seconds. 
+Allow up to 3 resend attempts. 
+After 3 resends, show: "Maximum resend attempts reached. Please login again." 
+On resend, a new OTP is generated and timer resets. 
+Business Logic Rules 
+OTP: 6-digit numeric 
+OTP expires in 2 minutes from generation 
+Resend OTP: 
+Max: 3 attempts 
+Cooldown: 30 seconds between each 
+Prevent OTP reuse 
+Secure session initiation on successful verification 
+Session should be persistent until logout or timeout 
+Use secure storage (e.g. HTTP-only cookies or tokens) 
+All communication must be over HTTPS

@@ -1,0 +1,105 @@
+import mongoose, { Schema, Document, Model } from 'mongoose';
+import bcrypt from 'bcryptjs';
+import { PASSWORD, ADMIN_TYPES } from '../config/constants';
+
+export interface IAdmin extends Document {
+  email: string;
+  phone: string;
+  password: string;
+  adminType: typeof ADMIN_TYPES.SUPER_ADMIN | typeof ADMIN_TYPES.PROPERTY_MANAGER;
+  isActive: boolean;
+  otp: string;
+  otpExpires?: Date;
+  createdAt: Date;
+  updatedAt: Date;
+  comparePassword(candidatePassword: string): Promise<boolean>;
+}
+
+// Define the Admin schema
+const adminSchema: Schema<IAdmin> = new Schema(
+  {
+    email: {
+      type: String,
+      required: [true, 'Email is required'],
+      unique: true,
+      lowercase: true,
+      trim: true,
+      match: [
+        /^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/,
+        'Please enter a valid email'
+      ]
+    },
+    phone: {
+      type: String,
+      required: [true, 'Phone number is required'],
+      trim: true,
+      match: [/^\+\d{1,4}\d{7,15}$/, 'Please enter a valid phone number with country code']
+    },
+    password: {
+      type: String,
+      required: [true, 'Password is required'],
+      minlength: [PASSWORD.MIN_LENGTH, `Password must be at least ${PASSWORD.MIN_LENGTH} characters long`],
+      select: false
+    },
+    adminType: {
+      type: String,
+      required: true,
+      enum: [ADMIN_TYPES.SUPER_ADMIN, ADMIN_TYPES.PROPERTY_MANAGER]
+    },
+    isActive: {
+      type: Boolean,
+      default: true
+    },
+    otp: {
+      type: String,
+      select: false
+    },
+    otpExpires: {
+      type: Date,
+      select: false
+    }
+  },
+  { 
+    timestamps: true,
+    toJSON: {
+      transform: function(doc, ret) {
+        delete ret.password;
+        delete ret.otp;
+        delete ret.__v;
+        return ret;
+      }
+    }
+  }
+);
+
+// Indexes
+adminSchema.index({ email: 1 });
+adminSchema.index({ phone: 1 });
+adminSchema.index({ adminType: 1 });
+adminSchema.index({ isActive: 1 });
+
+// Hash password before saving
+adminSchema.pre('save', async function (next) {
+  if (!this.isModified('password')) return next();
+
+  try {
+    const salt = await bcrypt.genSalt(PASSWORD.SALT_ROUNDS);
+    this.password = await bcrypt.hash(this.password, salt);
+    next();
+  } catch (error: any) {
+    next(error);
+  }
+});
+
+// Compare password method
+adminSchema.methods.comparePassword = async function (candidatePassword: string): Promise<boolean> {
+  try {
+    return await bcrypt.compare(candidatePassword, this.password);
+  } catch (error) {
+    throw error;
+  }
+};
+
+const Admin = mongoose.model<IAdmin>('Admin', adminSchema);
+
+export default Admin;

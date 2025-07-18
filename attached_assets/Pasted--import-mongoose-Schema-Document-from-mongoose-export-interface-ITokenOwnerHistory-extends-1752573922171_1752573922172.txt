@@ -1,0 +1,152 @@
+
+import mongoose, { Schema, Document } from 'mongoose';
+
+export interface ITokenOwnerHistory extends Document {
+  _tokenOwner: mongoose.Schema.Types.ObjectId;
+  _property: mongoose.Schema.Types.ObjectId;
+  _user: mongoose.Schema.Types.ObjectId;
+  tokenId: string;
+  totalQuantity: number;
+  availableQuantity: number;
+  onListQuantity: number;
+  isActive: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+const tokenOwnerHistorySchema = new Schema<ITokenOwnerHistory>(
+  {
+    _tokenOwner: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'TokenOwner',
+      required: [true, 'Token owner reference is required'],
+      index: true
+    },
+    _property: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Property',
+      required: [true, 'Property is required'],
+      index: true
+    },
+    _user: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      required: [true, 'User is required'],
+      index: true
+    },
+    tokenId: {
+      type: String,
+      required: [true, 'Token ID is required'],
+      trim: true,
+      index: true
+    },
+    totalQuantity: {
+      type: Number,
+      required: [true, 'Total quantity is required'],
+      min: [0, 'Total quantity cannot be negative'],
+      default: 0
+    },
+    availableQuantity: {
+      type: Number,
+      required: [true, 'Available quantity is required'],
+      min: [0, 'Available quantity cannot be negative'],
+      default: 0
+    },
+    onListQuantity: {
+      type: Number,
+      required: [true, 'On list quantity is required'],
+      min: [0, 'On list quantity cannot be negative'],
+      default: 0
+    },
+    isActive: {
+      type: Boolean,
+      default: true,
+      required: [true, 'Active status is required']
+    }
+  },
+  {
+    timestamps: true,
+    toJSON: {
+      transform: function(doc, ret) {
+        const { __v, ...cleanRet } = ret;
+        return cleanRet;
+      }
+    }
+  }
+);
+
+// Indexes for better query performance
+tokenOwnerHistorySchema.index({ _tokenOwner: 1 });
+tokenOwnerHistorySchema.index({ _property: 1, _user: 1 });
+tokenOwnerHistorySchema.index({ tokenId: 1 });
+tokenOwnerHistorySchema.index({ _user: 1, isActive: 1 });
+tokenOwnerHistorySchema.index({ _property: 1, isActive: 1 });
+tokenOwnerHistorySchema.index({ totalQuantity: 1 });
+tokenOwnerHistorySchema.index({ availableQuantity: 1 });
+tokenOwnerHistorySchema.index({ onListQuantity: 1 });
+tokenOwnerHistorySchema.index({ createdAt: -1 });
+
+// Compound indexes
+tokenOwnerHistorySchema.index({ _tokenOwner: 1, createdAt: -1 });
+tokenOwnerHistorySchema.index({ _user: 1, _property: 1, createdAt: -1 });
+tokenOwnerHistorySchema.index({ _property: 1, tokenId: 1, createdAt: -1 });
+tokenOwnerHistorySchema.index({ _user: 1, tokenId: 1, createdAt: -1 });
+
+// Static method to get history by token owner
+tokenOwnerHistorySchema.statics.getHistoryByTokenOwner = function(tokenOwnerId: string) {
+  return this.find({
+    _tokenOwner: new mongoose.Types.ObjectId(tokenOwnerId)
+  })
+    .populate('_property', 'title type')
+    .populate('_user', 'name.fullName email')
+    .sort({ createdAt: -1 });
+};
+
+// Static method to get user's token history
+tokenOwnerHistorySchema.statics.getUserTokenHistory = function(userId: string) {
+  return this.find({
+    _user: new mongoose.Types.ObjectId(userId)
+  })
+    .populate('_property', 'title type')
+    .populate('_tokenOwner')
+    .sort({ createdAt: -1 });
+};
+
+// Static method to get property token history
+tokenOwnerHistorySchema.statics.getPropertyTokenHistory = function(propertyId: string) {
+  return this.find({
+    _property: new mongoose.Types.ObjectId(propertyId)
+  })
+    .populate('_user', 'name.fullName email')
+    .populate('_tokenOwner')
+    .sort({ createdAt: -1 });
+};
+
+// Static method to track quantity changes over time
+tokenOwnerHistorySchema.statics.getQuantityChanges = function(tokenOwnerId: string) {
+  return this.aggregate([
+    {
+      $match: {
+        _tokenOwner: new mongoose.Types.ObjectId(tokenOwnerId)
+      }
+    },
+    {
+      $sort: { createdAt: 1 }
+    },
+    {
+      $project: {
+        createdAt: 1,
+        totalQuantity: 1,
+        availableQuantity: 1,
+        onListQuantity: 1,
+        quantityDifference: {
+          $subtract: ['$totalQuantity', { $ifNull: ['$previousTotalQuantity', 0] }]
+        }
+      }
+    }
+  ]);
+};
+
+const TokenOwnerHistory = mongoose.model<ITokenOwnerHistory>('TokenOwnerHistory', tokenOwnerHistorySchema);
+
+export default TokenOwnerHistory;
